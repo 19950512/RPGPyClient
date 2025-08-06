@@ -4,6 +4,7 @@ import grpc
 import os
 from protos import game_pb2, game_pb2_grpc
 from .create_account_screen import create_account_screen
+from .select_character import select_character_screen
 
 def do_login(stub, email, senha):
     req = game_pb2.LoginRequest(email=email, password=senha)
@@ -40,7 +41,31 @@ def login_screen(screen):
                     focus = 1
                 elif btn_entrar.collidepoint(event.pos):
                     focus = 2
-                    return email, senha
+                    # Autentica
+                    server_addr = os.getenv("GRPC_SERVER", "localhost:50051")
+                    channel = grpc.insecure_channel(server_addr)
+                    stub = game_pb2_grpc.GameServiceStub(channel)
+                    resp = do_login(stub, email, senha)
+                    if resp.success:
+                        characters = []
+                        if hasattr(resp, 'characters') and resp.characters:
+                            for c in resp.characters:
+                                characters.append({
+                                    'name': getattr(c, 'name', 'Sem nome'),
+                                    'vocation': getattr(c, 'vocation', '-'),
+                                    'level': getattr(c, 'level', 1)
+                                })
+                        else:
+                            characters = [{
+                                'name': getattr(resp, 'player_name', email),
+                                'vocation': getattr(resp, 'vocation', '-'),
+                                'level': getattr(resp, 'level', 1)
+                            }]
+                        selected = select_character_screen(screen, characters)
+                        return email, senha, selected
+                    else:
+                        error_msg = resp.message or 'Login ou senha inválidos.'
+                        continue
                 elif btn_criar.collidepoint(event.pos):
                     focus = 3
                     # Chama tela de cadastro
@@ -71,7 +96,32 @@ def login_screen(screen):
                             senha += event.unicode
                 elif focus == 2:
                     if event.key == pygame.K_RETURN:
-                        return email, senha
+                        # Simula clique no botão entrar
+                        focus = 2
+                        server_addr = os.getenv("GRPC_SERVER", "localhost:50051")
+                        channel = grpc.insecure_channel(server_addr)
+                        stub = game_pb2_grpc.GameServiceStub(channel)
+                        resp = do_login(stub, email, senha)
+                        if resp.success:
+                            characters = []
+                            if hasattr(resp, 'characters') and resp.characters:
+                                for c in resp.characters:
+                                    characters.append({
+                                        'name': getattr(c, 'name', 'Sem nome'),
+                                        'vocation': getattr(c, 'vocation', '-'),
+                                        'level': getattr(c, 'level', 1)
+                                    })
+                            else:
+                                characters = [{
+                                    'name': getattr(resp, 'player_name', email),
+                                    'vocation': getattr(resp, 'vocation', '-'),
+                                    'level': getattr(resp, 'level', 1)
+                                }]
+                            selected = select_character_screen(screen, characters)
+                            return email, senha, selected
+                        else:
+                            error_msg = resp.message or 'Login ou senha inválidos.'
+                            continue
         screen.fill((30,30,30))
         # Título
         titulo = font.render('RPG do Maydas - Entrar', True, (255,255,0))

@@ -13,6 +13,9 @@ __pycache__/
 .venv/
 venv/
 ENV/
+RPGPyClient.spec
+build
+dist
 .envrc
 # IDEs
 .idea/

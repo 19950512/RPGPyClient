@@ -1,18 +1,27 @@
 
+import sys
+import os
+
+# Compatível com PyInstaller: resolve caminho de recursos
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(__file__), relative_path)
+
 # game_screen.py
 # Tela principal do jogo PyGame
 
-import pygame
-import sys
-import threading
-import game_pb2
 
+from dotenv import load_dotenv
+
+import pygame
+import threading
+from protos import game_pb2
 
 PLAYER_SIZE = 32
 BG_COLOR = (30, 30, 30)
 
-import os
-IMG_DIR = os.path.join(os.path.dirname(__file__), 'imagens')
+IMG_DIR = resource_path('imagens')
 PLAYER_SPRITE = pygame.image.load(os.path.join(IMG_DIR, '1.png'))
 PLAYER_SPRITE = pygame.transform.scale(PLAYER_SPRITE, (PLAYER_SIZE, PLAYER_SIZE))
 OTHER_SPRITES = [pygame.transform.scale(pygame.image.load(os.path.join(IMG_DIR, f'{i}.png')), (PLAYER_SIZE, PLAYER_SIZE)) for i in range(2, 12)]
@@ -56,6 +65,39 @@ def game_screen(screen, email, stub):
     updater = PositionUpdater(stub, email, status, get_pos)
     updater.start()
 
+    def show_character_info(screen, char_resp):
+        font = pygame.font.Font(None, 32)
+        font_small = pygame.font.Font(None, 24)
+        width, height = screen.get_size()
+        running = True
+        while running:
+            screen.fill((20,20,40))
+            titulo = font.render('Informações do Personagem', True, (0,255,255))
+            screen.blit(titulo, (width//2-titulo.get_width()//2, 60))
+            info = [
+                f"Nome: {getattr(char_resp, 'player_name', '-')} ",
+                f"Vocação: {getattr(char_resp, 'vocation', '-')} ",
+                f"Level: {getattr(char_resp, 'level', '-')} ",
+                f"HP: {getattr(char_resp, 'current_hp', '-')} / {getattr(char_resp, 'max_hp', '-')} ",
+                f"Ataque: {getattr(char_resp, 'base_attack', '-')} ",
+                f"Defesa: {getattr(char_resp, 'base_defense', '-')} ",
+                f"Moedas: {getattr(char_resp, 'coins', '-')} "
+            ]
+            for i, line in enumerate(info):
+                txt = font_small.render(line, True, (255,255,255))
+                screen.blit(txt, (width//2-txt.get_width()//2, 140+i*40))
+            instr = font_small.render('Pressione ESC para voltar', True, (180,180,180))
+            screen.blit(instr, (width//2-instr.get_width()//2, height-60))
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                        break
+
     def fetch_players():
         try:
             resp = stub.GetOnlinePlayers(game_pb2.GetOnlinePlayersRequest())
@@ -74,20 +116,27 @@ def game_screen(screen, email, stub):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 updater.stop()
+                # Envia status offline antes de sair
+                try:
+                    req = game_pb2.UpdatePlayerStatusRequest(email=email, status="offline", x=x, y=y)
+                    stub.UpdatePlayerStatus(req)
+                except Exception:
+                    pass
                 running = False
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
                     updater.stop()
+                    # Envia status offline antes de sair
+                    try:
+                        req = game_pb2.UpdatePlayerStatusRequest(email=email, status="offline", x=x, y=y)
+                        stub.UpdatePlayerStatus(req)
+                    except Exception:
+                        pass
                     return
                 if event.key == pygame.K_p:
-                    # Buscar status do jogador e mostrar tela de informações
-                    try:
-                        from login import show_character_screen
-                        show_character_screen(screen, char_resp)
-                    except Exception as e:
-                        print(f"[CLIENT] Erro ao buscar dados do personagem: {e}")
+                    show_character_info(screen, char_resp)
         if keys[pygame.K_LEFT]: x -= speed
         if keys[pygame.K_RIGHT]: x += speed
         if keys[pygame.K_UP]: y -= speed
