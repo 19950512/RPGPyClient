@@ -47,6 +47,9 @@ def game_screen(screen, email, stub):
     clock = pygame.time.Clock()
     running = True
     players = []
+
+    char_req = game_pb2.GetPlayerStatusRequest(email=email)
+    char_resp = stub.GetPlayerStatus(char_req)
     
     def get_pos():
         return x, y
@@ -67,6 +70,7 @@ def game_screen(screen, email, stub):
     fetch_timer = 0
     FETCH_INTERVAL = 100  # ms (atualiza a cada 0.1s)
     while running:
+        keys = pygame.key.get_pressed()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 updater.stop()
@@ -77,7 +81,13 @@ def game_screen(screen, email, stub):
                     running = False
                     updater.stop()
                     return
-        keys = pygame.key.get_pressed()
+                if event.key == pygame.K_p:
+                    # Buscar status do jogador e mostrar tela de informações
+                    try:
+                        from login import show_character_screen
+                        show_character_screen(screen, char_resp)
+                    except Exception as e:
+                        print(f"[CLIENT] Erro ao buscar dados do personagem: {e}")
         if keys[pygame.K_LEFT]: x -= speed
         if keys[pygame.K_RIGHT]: x += speed
         if keys[pygame.K_UP]: y -= speed
@@ -105,7 +115,7 @@ def game_screen(screen, email, stub):
 
         # Desenha o próprio jogador
         screen.blit(PLAYER_SPRITE, (x, y))
-        label = font.render(email, True, (255,255,255))
+        label = font.render(char_resp.player_name, True, (255,255,255))
         screen.blit(label, (x, y-20))
         pygame.display.flip()
         clock.tick(60)
