@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+.DS_Store
+.env
+.venv/
+venv/
+ENV/
+.envrc
+# IDEs
+.idea/
+.vscode/
+# Protobuf
+*_pb2.py
+*_pb2_grpc.py
+# Imagens e assets gerados temporariamente
+# (remova se quiser versionar imagens)
+# imagens/
+protos/*.pyc
+protos/__pycache__/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+.DS_Store
+.env
+.venv/
+venv/
+ENV/
+.envrc
+# IDEs
+.idea/
+.vscode/
+# Protobuf
+*_pb2.py
+*_pb2_grpc.py
+# Imagens e assets gerados temporariamente
+# (remova se quiser versionar imagens)
+# imagens/
+__pycache__/
+protos/*.pyc
+protos/__pycache__/
