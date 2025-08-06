@@ -3,9 +3,9 @@
 Cliente Python/PyGame para o RPG multiplayer.
 
 Coloque aqui apenas o código do cliente Python. O backend .NET e outros componentes ficam em suas respectivas pastas.
-# RPGConsole PyGame Client
+# RPGPyClient
 
-Cliente gráfico em Python usando PyGame e gRPC para o RPGConsole.
+Cliente gráfico em Python usando PyGame e gRPC para o RPG.
 
 ## Como rodar
 
@@ -16,7 +16,7 @@ Cliente gráfico em Python usando PyGame e gRPC para o RPGConsole.
 
 2. Gere os stubs gRPC a partir do `game.proto`:
    ```bash
-   python -m grpc_tools.protoc -I../../RPGShared/Protos --python_out=protos --grpc_python_out=protos ../../RPGShared/Protos/game.proto
+   python -m grpc_tools.protoc -I ../RPGShared/Protos --python_out=protos --grpc_python_out=protos ../RPGShared/Protos/game.proto
    ```
    (Certifique-se de que a pasta `protos/` existe dentro de `PyClient`)
 
